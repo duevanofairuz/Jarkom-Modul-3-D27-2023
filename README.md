@@ -69,8 +69,8 @@ Setelah mengalahkan Demon King, perjalanan berlanjut. Kali ini, kalian diminta u
 
 
 ### Penyelesaian
-![Alt text](image.png)
-![Alt text](image-1.png)
+![Alt text](img/image.png)
+![Alt text](img/image-1.png)
 
 **Script di node Heiter:**
 ```sh
@@ -189,7 +189,7 @@ service bind9 restart
 * Mengarahkan IP ke Loadbalancer (Eisen)
 
 ### Output
-![Alt text](image-2.png)
+![Alt text](img/image-2.png)
 * Hasil uji ping ke domain yang telah dibuat
 
 
@@ -208,7 +208,7 @@ Kemudian, karena masih banyak spell yang harus dikumpulkan, bantulah para petual
 
 
 ### Penyelesaian
-![Alt text](image-3.png)
+![Alt text](img/image-3.png)
 * Melakukan konfigurasi di /etc/network/interfaces seperti gambar di atas
 
 **Isi script node Himmel(DHCP Server):**
@@ -309,8 +309,8 @@ service isc-dhcp-relay restart
 
 
 ### Output
-![Alt text](image-4.png)
-![Alt text](image-5.png)
+![Alt text](img/image-4.png)
+![Alt text](img/image-5.png)
 
 Kendala:
 
@@ -376,8 +376,8 @@ service php7.3-fpm start
 * Melakukan link file konfig dengan command `ln -s /etc/nginx/sites-available/granz /etc/nginx/sites-enabled`
 
 ### Output
-![Alt text](image-6.png)
-![Alt text](image-7.png)
+![Alt text](img/image-6.png)
+![Alt text](img/image-7.png)
 
 
 Kendala:
@@ -432,9 +432,9 @@ service nginx restart
 * Melakukan symlink `ln -s /etc/nginx/sites-available/lb-jarkom /etc/nginx/sites-enabled`
 
 ### Output
-![Alt text](image-8.png)
-![Alt text](image-9.png)
-![Alt text](image-10.png)
+![Alt text](img/image-8.png)
+![Alt text](img/image-9.png)
+![Alt text](img/image-10.png)
 
 ### ab testing
 * Menjalankan command
@@ -522,11 +522,11 @@ Kendala:
 ### Penyelesaian
 Cukup menjalankan script Bernama `no8algoA.sh` di node Eisen lalu ubah isi upstream sebagai berikut setiap pengetesannya.<br>
 **3 worker**<br>
-![Alt text](image-11.png)<br>
+![Alt text](img/image-11.png)<br>
 **2 worker**<br>
-![Alt text](image-12.png)<br>
+![Alt text](img/image-12.png)<br>
 **1 worker**<br>
-![Alt text](image-13.png)<br>
+![Alt text](img/image-13.png)<br>
 
 ### ab testing
 Command: 
@@ -595,11 +595,11 @@ service nginx restart
 
 
 ### Output
-![Alt text](image-14.png)<br>
-![Alt text](image-15.png)<br>
-![Alt text](image-16.png)<br>
-![Alt text](image-17.png)<br>
-![Alt text](image-18.png)<br>
+![Alt text](img/image-14.png)<br>
+![Alt text](img/image-15.png)<br>
+![Alt text](img/image-16.png)<br>
+![Alt text](img/image-17.png)<br>
+![Alt text](img/image-18.png)<br>
 
 Kendala:
 
@@ -660,9 +660,9 @@ service nginx restart
 ```
 
 ### Output
-![Alt text](image-19.png)<br>
-![Alt text](image-20.png)
-![Alt text](image-21.png)
+![Alt text](img/image-19.png)<br>
+![Alt text](img/image-20.png)
+![Alt text](img/image-21.png)
 
 Kendala:
 
@@ -724,10 +724,10 @@ service nginx restart
 * Menolak semua request selain dari IP yang di allow dengan cara `deny all;`
 
 ### Output
-![Alt text](image-22.png)
+![Alt text](img/image-22.png)
 * Lalu restart node stark (disini saya hanya mengubah network interfaces stark untuk mengetes)
-![Alt text](image-23.png)
-![Alt text](image-24.png)
+![Alt text](img/image-23.png)
+![Alt text](img/image-24.png)
 
 
 Kendala:
@@ -766,8 +766,8 @@ service mysql restart
 
 
 ### Output
-![Alt text](image-25.png)
-![Alt text](image-26.png)
+![Alt text](img/image-25.png)
+![Alt text](img/image-26.png)
 
 
 Kendala:
@@ -891,8 +891,8 @@ service nginx restart
 * Melakukan symlink dan chown
 
 ### Output
-![Alt text](image-27.png)
-![Alt text](image-28.png)
+![Alt text](img/image-27.png)
+![Alt text](img/image-28.png)
 
 Kendala:
 
@@ -935,8 +935,8 @@ service php7.3-fpm restart
 * Melakukan symlink
 
 **tes lb**
-![Alt text](image-29.png)
-![Alt text](image-30.png)
+![Alt text](img/image-29.png)
+![Alt text](img/image-30.png)
 
 ### no.15 POST /auth/register:<br>
 
@@ -944,7 +944,7 @@ curl:
 ```sh
 curl -X POST "http://riegel.canyon.d27.com/api/auth/register" -d "username=duevano&password=duevano"
 ```
-![Alt text](image-31.png)
+![Alt text](img/image-31.png)
 
 ab testing:
 ```sh
@@ -965,7 +965,7 @@ curl:
 ```sh
 curl -X POST "http://riegel.canyon.d27.com/api/auth/login" -d "username=duevano&password=duevano"
 ```
-![Alt text](image-32.png)
+![Alt text](img/image-32.png)
 
 ab testing:
 ```sh
@@ -986,7 +986,7 @@ curl:
 ```sh
 curl -X GET "http://riegel.canyon.d27.com/api/me" -H "Authorization: Bearer [token yang barusan didapat]"
 ```
-![Alt text](image-33.png)
+![Alt text](img/image-33.png)
 
 ab testing:
 ```sh
@@ -1062,8 +1062,8 @@ service php7.3-fpm restart
 lynx riegel.canyon.d27.com/frieren<br>
 lynx riegel.canyon.d27.com/flamme<br>
 lynx riegel.canyon.d27.com/fern<br>
-![Alt text](image-34.png)
-![Alt text](image-35.png)
+![Alt text](img/image-34.png)
+![Alt text](img/image-35.png)
 
 
 Kendala:
@@ -1126,13 +1126,13 @@ ab -n 100 -c 10 http://riegel.canyon.d27.com/
 
 ### Output
 (15 6 3 9) <br>
-![Alt text](image-36.png)
+![Alt text](img/image-36.png)
 
 (20 10 5 15) <br>
-![Alt text](image-37.png)
+![Alt text](img/image-37.png)
 
 (30 15 7 20) <br>
-![Alt text](image-38.png)
+![Alt text](img/image-38.png)
 
 * Bisa disimpulkan dengan meningkatkan jumlah atribut di atas dapat meningkatkan performa loadbalancing dari setiap worker
 * Selain itu juga meminimalisir penggunaan CPU dari setiap worker
@@ -1202,7 +1202,7 @@ ab -n 100 -c 10 http://riegel.canyon.d27.com/
 ```
 
 ### Output
-![Alt text](image-39.png)
+![Alt text](img/image-39.png)
 * Untuk lebih jelasnya bisa dicek di [GRIMOIRE](https://docs.google.com/document/d/1iqQ7df3Q7cw7-deWoB5pyWaQEnqQNwwH/edit?usp=sharing&ouid=103928347637411344802&rtpof=true&sd=true)
 
 
