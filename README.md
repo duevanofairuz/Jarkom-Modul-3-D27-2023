@@ -13,21 +13,21 @@ Anggota Kelompok Jarkom D27:
 
 LOKASI SHELL SCRIPT / KONFIGURASI TIAP NOMOR:
 
-0. Topologi, Heiter</br>
-1-5. Himmel, Aura
-6. Lawine, Linie, Lugner
-7. Eisen
-8. Eisen
-9. Eisen
-10. Eisen
-11. Eisen
-12. Eisen 
-13. Denken (Frieren, Flamme, Fern cukup install mariadb-client)
-14. Frieren, Flamme, Fern</br>
-15-17. Eisen
-18. Eisen
-19. Frieren, Flamme, Fern
-20. Eisen
+* 0. Topologi, Heiter</br>
+* 1-5. Himmel, Aura<br>
+* 6. Lawine, Linie, Lugner
+* 7. Eisen
+* 8. Eisen
+* 9. Eisen
+* 10. Eisen
+* 11. Eisen
+* 12. Eisen 
+* 13. Denken (Frieren, Flamme, Fern cukup install mariadb-client)
+* 14. Frieren, Flamme, Fern</br>
+* 15-17. Eisen
+* 18. Eisen
+* 19. Frieren, Flamme, Fern
+* 20. Eisen
 </br></br>
 
 **KONFIG /root/.bashrc**</br>
@@ -736,13 +736,38 @@ Kendala:
 ----------------------------------------------------------------------------------------------------------------------------------
 # No. 13
 ### Soal
-
+Karena para petualang kehabisan uang, mereka kembali bekerja untuk mengatur riegel.canyon.yyy.com.
+1. Semua data yang diperlukan, diatur pada Denken dan harus dapat diakses oleh Frieren, Flamme, dan Fern. **(13)**
 
 
 ### Penyelesaian
+**Isi script node Denken:**
+```sh
+#!/bin/bash
+
+service mysql start
+
+mysql -u "root" -p"" -se "CREATE USER 'kelompokd27'@'%' IDENTIFIED BY 'passwordd27';"
+mysql -u "root" -p"" -se "CREATE USER 'kelompokd27'@'localhost' IDENTIFIED BY 'passwordd27';"
+mysql -u "root" -p"" -se "CREATE DATABASE dbkelompokd27;"
+mysql -u "root" -p"" -se "GRANT ALL PRIVILEGES ON *.* TO 'kelompokd27'@'%';"
+mysql -u "root" -p"" -se "GRANT ALL PRIVILEGES ON *.* TO 'kelompokd27'@'localhost';"
+mysql -u "root" -p"" -se "FLUSH PRIVILEGES;"
+
+echo '[mysqld]
+skip-networking=0
+skip-bind-address
+' > /etc/mysql/my.cnf
+
+service mysql restart
+```
+* Melakukan create user, create db, dan grant privileges
+* Melakukan sedikit konfig di `/etc/mysql/my.cnf` untuk bypass bind-address tanpa pengamanan
 
 
 ### Output
+![Alt text](image-25.png)
+![Alt text](image-26.png)
 
 
 Kendala:
@@ -751,28 +776,434 @@ Kendala:
 ----------------------------------------------------------------------------------------------------------------------------------
 # No. 14
 ### Soal
-
+2.	Frieren, Flamme, dan Fern memiliki Riegel Channel sesuai dengan quest guide berikut. Jangan lupa melakukan instalasi PHP8.0 dan Composer **(14)**
 
 
 ### Penyelesaian
+**Isi script node Frieren, Flamme, Fern:**
+```sh
+#!/bin/bash
 
+cp /var/www/laravel-praktikum-jarkom/.env.example /var/www/laravel-praktikum-jarkom/.env
+echo 'APP_NAME=Laravel
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://localhost
+
+LOG_CHANNEL=stack
+LOG_DEPRECATIONS_CHANNEL=null
+LOG_LEVEL=debug
+
+DB_CONNECTION=mysql
+DB_HOST=10.35.2.1
+DB_PORT=3306
+DB_DATABASE=dbkelompokd27
+DB_USERNAME=kelompokd27
+DB_PASSWORD=passwordd27
+
+BROADCAST_DRIVER=log
+CACHE_DRIVER=file
+FILESYSTEM_DISK=local
+QUEUE_CONNECTION=sync
+SESSION_DRIVER=file
+SESSION_LIFETIME=120
+
+MEMCACHED_HOST=127.0.0.1
+
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+
+MAIL_MAILER=smtp
+MAIL_HOST=mailpit
+MAIL_PORT=1025
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS="hello@example.com"
+MAIL_FROM_NAME="${APP_NAME}"
+
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_DEFAULT_REGION=us-east-1
+AWS_BUCKET=
+AWS_USE_PATH_STYLE_ENDPOINT=false
+
+PUSHER_APP_ID=
+PUSHER_APP_KEY=
+PUSHER_APP_SECRET=
+PUSHER_HOST=
+PUSHER_PORT=443
+PUSHER_SCHEME=https
+PUSHER_APP_CLUSTER=mt1
+
+VITE_PUSHER_APP_KEY="${PUSHER_APP_KEY}"
+VITE_PUSHER_HOST="${PUSHER_HOST}"
+VITE_PUSHER_PORT="${PUSHER_PORT}"
+VITE_PUSHER_SCHEME="${PUSHER_SCHEME}"
+VITE_PUSHER_APP_CLUSTER="${PUSHER_APP_CLUSTER}"
+
+' > /var/www/laravel-praktikum-jarkom/.env
+
+php artisan migrate:fresh
+php artisan db:seed --class=AiringsTableSeeder
+php artisan jwt:secret
+php artisan key:generate
+
+echo 'server {
+
+    listen 8001;
+
+    root /var/www/laravel-praktikum-jarkom/public;
+
+    index index.php index.html index.htm;
+    server_name _;
+
+    location / {
+            try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    # pass PHP scripts to FastCGI server
+    location ~ \.php$ {
+    include snippets/fastcgi-php.conf;
+    fastcgi_pass unix:/var/run/php/php8.0-fpm.sock;
+    }
+
+location ~ /\.ht {
+            deny all;
+    }
+
+    error_log /var/log/nginx/implementasi_error.log;
+    access_log /var/log/nginx/implementasi_access.log;
+}
+' > /etc/nginx/sites-available/riegel
+
+unlink /etc/nginx/sites-enabled/default
+ln -s /etc/nginx/sites-available/riegel /etc/nginx/sites-enabled/
+chown -R www-data.www-data /var/www/laravel-praktikum-jarkom/storage
+service php8.0-fpm start
+service nginx restart
+```
+* Melakukan sedikit config di file `.env`
+* Menjalankan beberapa command php artisan
+* Kalau di node flamme dan fern **gapake migrate fresh dan jwt**, selain itu untuk port nya berturut2 adalah 8002 dan 8003.
+* Melakukan symlink dan chown
 
 ### Output
+![Alt text](image-27.png)
+![Alt text](image-28.png)
+
+Kendala:
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+# No. 15-17
+### Soal
+3.	Riegel Channel memiliki beberapa endpoint yang harus ditesting sebanyak 100 request dengan 10 request/second. Tambahkan response dan hasil testing pada grimoire.<br>
+a.	POST /auth/register (15)<br>
+b.	POST /auth/login (16)<br>
+c.	GET /me (17)<br>
+
+
+### Penyelesaian
+**Isi script node Eisen:**
+```sh
+#!/bin/bash
+
+echo 'upstream laravel {
+        server 10.35.4.1:8001;
+        server 10.35.4.2:8002;
+        server 10.35.4.3:8003;
+}
+
+server {
+        listen 80;
+        server_name riegel.canyon.d27.com;
+
+        location / {
+                proxy_pass http://laravel;
+        }
+}
+' > /etc/nginx/sites-available/lb-jarkom2
+
+ln -s /etc/nginx/sites-available/lb-jarkom2 /etc/nginx/sites-enabled
+service nginx restart
+service php7.3-fpm restart
+```
+* Melakukan konfig loadbalancer seperti biasa dengan port ip masing-masing worker
+* Melakukan symlink
+
+**tes lb**
+![Alt text](image-29.png)
+![Alt text](image-30.png)
+
+### no.15 POST /auth/register:<br>
+
+curl:
+```sh
+curl -X POST "http://riegel.canyon.d27.com/api/auth/register" -d "username=duevano&password=duevano"
+```
+![Alt text](image-31.png)
+
+ab testing:
+```sh
+ab -n 100 -c 10 -p ~/postreg.json -T application/json http://riegel.canyon.d27.com/api/auth/register/
+```
+
+isi postreg.json:
+```json
+{
+    "username": "jarkomEZ",
+    "password": "jarkomEZ"
+}
+```
+
+### no.16 POST /auth/login:<br>
+
+curl:
+```sh
+curl -X POST "http://riegel.canyon.d27.com/api/auth/login" -d "username=duevano&password=duevano"
+```
+![Alt text](image-32.png)
+
+ab testing:
+```sh
+ab -n 100 -c 10 -p ~/postreg.json -T application/json http://riegel.canyon.d27.com/api/auth/login/
+```
+
+isi postreg.json:
+```json
+{
+    "username": "jarkomEZ",
+    "password": "jarkomEZ"
+}
+```
+
+### no.17 GET /me<br>
+
+curl:
+```sh
+curl -X GET "http://riegel.canyon.d27.com/api/me" -H "Authorization: Bearer [token yang barusan didapat]"
+```
+![Alt text](image-33.png)
+
+ab testing:
+```sh
+ab -n 100 -c 10 -H "Authorization: Bearer [token yang barusan didapat]" -r -k "http://riegel.canyon.d27.com/api/me"
+```
+
+### Output
+Untuk hasil ab testing yang lebih lengkap bisa dilihat di [GRIMOIRE](https://docs.google.com/document/d/1iqQ7df3Q7cw7-deWoB5pyWaQEnqQNwwH/edit?usp=sharing&ouid=103928347637411344802&rtpof=true&sd=true)
+
+Kendala:
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+# No. 18
+### Soal
+4.	Untuk memastikan ketiganya bekerja sama secara adil untuk mengatur Riegel Channel maka implementasikan Proxy Bind pada Eisen untuk mengaitkan IP dari Frieren, Flamme, dan Fern. **(18)**
+
+
+### Penyelesaian
+**Isi script node Eisen:**
+```sh
+#!/bin/bash
+
+echo 'upstream laravel {
+        server 10.35.4.1:8001;
+        server 10.35.4.2:8002;
+        server 10.35.4.3:8003;
+}
+
+server {
+        listen 80;
+        server_name riegel.canyon.d27.com;
+
+        location / {
+                proxy_pass http://laravel;
+        }
+
+        location /frieren/ {
+                # Frieren
+                proxy_bind 10.35.2.2;
+                proxy_pass http://10.35.4.1:8001/index.php;
+        }
+
+        location /flamme/ {
+                # Flamme
+                proxy_bind 10.35.2.2;
+                proxy_pass http://10.35.4.2:8002/index.php;
+        }
+
+        location /fern / {
+                # Fern
+                proxy_bind 10.35.2.2;
+                proxy_pass http://10.35.4.3:8003/index.php;
+        }
+}
+' > /etc/nginx/sites-available/lb-jarkom2
+
+
+ln -s /etc/nginx/sites-available/lb-jarkom2 /etc/nginx/sites-enabled
+service nginx restart
+service php7.3-fpm restart
+```
+* Sedikit Menambahkan masing-masing dari proxy bind IP Worker dengan kode 
+```
+        location /frieren/ {
+                # Frieren
+                proxy_bind 10.35.2.2;
+                proxy_pass http://10.35.4.1:8001/index.php;
+        }
+```
+
+### Output
+lynx riegel.canyon.d27.com/frieren<br>
+lynx riegel.canyon.d27.com/flamme<br>
+lynx riegel.canyon.d27.com/fern<br>
+![Alt text](image-34.png)
+![Alt text](image-35.png)
 
 
 Kendala:
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
-# No. 15
+# No. 19
 ### Soal
+5.	Untuk meningkatkan performa dari Worker, coba implementasikan PHP-FPM pada Frieren, Flamme, dan Fern. Untuk testing kinerja naikkan 
+- pm.max_children
+- pm.start_servers
+- pm.min_spare_servers
+- pm.max_spare_servers
+sebanyak tiga percobaan dan lakukan testing sebanyak 100 request dengan 10 request/second kemudian berikan hasil analisisnya pada Grimoire.**(19)**
 
 
 
 ### Penyelesaian
+* Default dari konfigurasi www.conf adalah 
+```conf
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+```
+* Sehingga saya akan ubah dan uji secara bertahap dengan kombinasi:<br>
+`pertama: 15 6 3 9` <br>
+`kedua: 20 10 5 15` <br>
+`ketiga: 30 15 7 20` <br>
+* Berikut ini adalah contoh script yang saya pakai untuk mengubahnya:
+**Isi script node Eisen (percobaan pertama):**
+```sh
+#!/bin/bash
 
+echo '[www]
+user = www-data
+group = www-data
+listen = /run/php/php8.0-fpm.sock
+listen.owner = www-data
+listen.group = www-data
+pm = dynamic
+pm.max_children = 15
+pm.start_servers = 6
+pm.min_spare_servers = 3
+pm.max_spare_servers = 9
+' > /etc/php/8.0/fpm/pool.d/www.conf
+
+service php8.0-fpm start
+service nginx restart
+```
+* Melakukan perubahan di pool nginx `/etc/php/8.0/fpm/pool.d/www.conf`
+* Mengubah jumlah pm.max_children, pm.start_servers, pm.min_spare_servers, dan pm.max_spare_servers di setiap pengujian ab testing
+
+### ab testing
+Menjalankan command
+```sh
+ab -n 100 -c 10 http://riegel.canyon.d27.com/
+```
 
 ### Output
+(15 6 3 9) <br>
+![Alt text](image-36.png)
+
+(20 10 5 15) <br>
+![Alt text](image-37.png)
+
+(30 15 7 20) <br>
+![Alt text](image-38.png)
+
+* Bisa disimpulkan dengan meningkatkan jumlah atribut di atas dapat meningkatkan performa loadbalancing dari setiap worker
+* Selain itu juga meminimalisir penggunaan CPU dari setiap worker
+* Untuk detail lebih jelasnya bisa dilihat di [GRIMOIRE](https://docs.google.com/document/d/1iqQ7df3Q7cw7-deWoB5pyWaQEnqQNwwH/edit?usp=sharing&ouid=103928347637411344802&rtpof=true&sd=true)
+
+
+Kendala:
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+# No. 20
+### Soal
+6.	Nampaknya hanya menggunakan PHP-FPM tidak cukup untuk meningkatkan performa dari worker maka implementasikan Least-Conn pada Eisen. Untuk testing kinerja dari worker tersebut dilakukan sebanyak 100 request dengan 10 request/second. **(20)**
+
+
+### Penyelesaian
+**Isi script node Eisen:**
+```sh
+#!/bin/bash
+
+echo 'upstream laravel {
+        least_conn;
+        server 10.35.4.1:8001;
+        server 10.35.4.2:8002;
+        server 10.35.4.3:8003;
+}
+
+server {
+        listen 80;
+        server_name riegel.canyon.d27.com;
+
+        location / {
+                proxy_pass http://laravel;
+        }
+
+        location /frieren/ {
+                # Frieren
+                proxy_bind 10.35.2.2;
+                proxy_pass http://10.35.4.1:8001/index.php;
+        }
+
+        location /flamme/ {
+                # Flamme
+                proxy_bind 10.35.2.2;
+                proxy_pass http://10.35.4.2:8002/index.php;
+        }
+
+        location /fern/ {
+                # Fern
+                proxy_bind 10.35.2.2;
+                proxy_pass http://10.35.4.3:8003/index.php;
+        }
+}
+' > /etc/nginx/sites-available/lb-jarkom2
+
+
+ln -s /etc/nginx/sites-available/lb-jarkom2 /etc/nginx/sites-enabled
+service nginx restart
+service php7.3-fpm restart
+```
+* Cukup menambahkan kode `least_conn;` di dalam upstream loadbalancer
+
+## ab testing
+Menjalankan command
+```sh
+ab -n 100 -c 10 http://riegel.canyon.d27.com/
+```
+
+### Output
+![Alt text](image-39.png)
+* Untuk lebih jelasnya bisa dicek di [GRIMOIRE](https://docs.google.com/document/d/1iqQ7df3Q7cw7-deWoB5pyWaQEnqQNwwH/edit?usp=sharing&ouid=103928347637411344802&rtpof=true&sd=true)
 
 
 Kendala:
