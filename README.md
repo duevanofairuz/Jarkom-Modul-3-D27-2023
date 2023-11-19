@@ -316,3 +316,466 @@ Kendala:
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
+# No. 6
+### Soal
+1.	Pada masing-masing worker PHP, lakukan konfigurasi virtual host untuk website berikut dengan menggunakan php 7.3. **(6)**
+
+
+### Penyelesaian
+**Isi script node Lawine, Linie, Lugner**
+```sh
+#!/bin/bash
+
+wget -O /var/www/granz.channel.d27.zip "https://drive.google.com/uc?export=download&id=1k-qOmAmA7pwSwi5u04iTyFsreBp2CHxs"
+
+sleep 5
+
+unzip /var/www/granz.channel.d27.zip -d /var/www/
+
+rm /var/www/granz.channel.d27.zip
+
+echo ' server {
+
+        listen 80;
+
+        root /var/www/granz.channel.d27;
+
+        index index.php index.html index.htm;
+        server_name granz.channel.d27.com;
+
+        location / {
+                        try_files $uri $uri/ /index.php?$query_string;
+        }
+
+        # pass PHP scripts to FastCGI server
+        location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php7.3-fpm.sock;
+        }
+
+ location ~ /\.ht {
+                        deny all;
+        }
+
+        error_log /var/log/nginx/granz_error.log;
+        access_log /var/log/nginx/granz_access.log;
+ }
+' > /etc/nginx/sites-available/granz
+
+ln -s /etc/nginx/sites-available/granz /etc/nginx/sites-enabled
+
+rm /etc/nginx/sites-available/default
+rm /etc/nginx/sites-enabled/default
+
+service nginx restart
+service php7.3-fpm start
+```
+* Melakukan setup deployment website menggunakan nginx seperti biasa
+* File resources di download lalu di ekstrak di dalam `/var/www`
+* Mengubah server_name menjadi `granz.channel.d27.com`
+* Melakukan link file konfig dengan command `ln -s /etc/nginx/sites-available/granz /etc/nginx/sites-enabled`
+
+### Output
+![Alt text](image-6.png)
+![Alt text](image-7.png)
+
+
+Kendala:
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+# No. 7
+### Soal
+2.	Kepala suku dari Bredt Region memberikan resource server sebagai berikut:<br>
+a.	Lawine, 4GB, 2vCPU, dan 80 GB SSD.<br>
+b.	Linie, 2GB, 2vCPU, dan 50 GB SSD.<br>
+c.	Lugner 1GB, 1vCPU, dan 25 GB SSD.<br>
+aturlah agar Eisen dapat bekerja dengan maksimal, lalu lakukan testing dengan 1000 request dan 100 request/second. **(7)**
+
+
+### Penyelesaian
+**Isi script node Eisen:**
+```sh
+#!/bin/bash
+
+echo '# Default menggunakan Round Robin
+upstream backend  {
+        server 10.35.3.1 weight=640; #IP Lawine
+        server 10.35.3.2 weight=200; #IP Linie
+        server 10.35.3.3 weight=25; #IP Lugner
+}
+
+server {
+listen 80;
+server_name granz.channel.d27.com;
+
+        location / {
+                proxy_pass http://backend;
+                proxy_set_header    X-Real-IP $remote_addr;
+                proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header    Host $http_host;
+        }
+
+error_log /var/log/nginx/granz_error.log;
+access_log /var/log/nginx/granz_access.log;
+
+}
+' > /etc/nginx/sites-available/lb-jarkom
+
+unlink /etc/nginx/sites-enabled/default
+ln -s /etc/nginx/sites-available/lb-jarkom /etc/nginx/sites-enabled
+service nginx restart
+```
+* Menambahkan setup loadbalancing seperti biasa
+* Menggunakan algoritma **weighted roundrobin** dengan bobot yang diperoleh berdasarkan perkalian resource yang tertera di soal
+* Mengubah server_name menjadi granz.channel.d27.com
+* Melakukan symlink `ln -s /etc/nginx/sites-available/lb-jarkom /etc/nginx/sites-enabled`
+
+### Output
+![Alt text](image-8.png)
+![Alt text](image-9.png)
+![Alt text](image-10.png)
+
+### ab testing
+* Menjalankan command
+```sh
+ab -n 1000 -c 100 http://granz.channel.d27.com/
+```
+* Hasil dari benchmark dapat dilihat di [GRIMOIRE](https://docs.google.com/document/d/1iqQ7df3Q7cw7-deWoB5pyWaQEnqQNwwH/edit?usp=sharing&ouid=103928347637411344802&rtpof=true&sd=true)
+
+Kendala:
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+# No. 8
+### Soal
+3.	Karena diminta untuk menuliskan grimoire, buatlah analisis hasil testing dengan 200 request dan 10 request/second masing-masing algoritma Load Balancer dengan ketentuan sebagai berikut:<br>
+a.	Nama Algoritma Load Balancer<br>
+b.	Report hasil testing pada Apache Benchmark<br>
+c.	Grafik request per second untuk masing masing algoritma.<br> 
+d.	Analisis **(8)**
+
+
+### Penyelesaian
+* Melakukan sedikit perubahan di `lb-jarkom` milik node Eisen
+* Melakukan pengetesan ab testing di setiap algoritma<br>
+
+* **Algoritma A (roundrobin)**
+```sh
+upstream backend  {
+        server 10.35.3.1; #IP Lawine
+        server 10.35.3.2; #IP Linie
+        server 10.35.3.3; #IP Lugner
+}
+```
+* **Algoritma B (weighted roundrobin)**
+```sh
+upstream backend  {
+        server 10.35.3.1 weight=100; #IP Lawine
+        server 10.35.3.2 weight=50; #IP Linie
+        server 10.35.3.3 weight=25; #IP Lugner
+}
+```
+* **Algoritma C (least connection)**
+```sh
+upstream backend  {
+        least_conn;
+        server 10.35.3.1; #IP Lawine
+        server 10.35.3.2; #IP Linie
+        server 10.35.3.3; #IP Lugner
+}
+```
+* **Algoritma D (iphash)**
+```sh
+upstream backend  {
+        ip_hash;
+        server 10.35.3.1; #IP Lawine
+        server 10.35.3.2; #IP Linie
+        server 10.35.3.3; #IP Lugner
+}
+```
+* **Algoritma E (generic hash)**
+```sh
+upstream backend  {
+        hash $request_uri consistent;
+        server 10.35.3.1; #IP Lawine
+        server 10.35.3.2; #IP Linie
+        server 10.35.3.3; #IP Lugner
+}
+```
+
+###ab testing
+* Menjalankan command `ab -n 200 -c 10 http://granz.channel.d27.com/` di setiap algoritma
+
+### Output
+Hasil dan analisis dari ab testing dapat dilihat di [GRIMOIRE](https://docs.google.com/document/d/1iqQ7df3Q7cw7-deWoB5pyWaQEnqQNwwH/edit?usp=sharing&ouid=103928347637411344802&rtpof=true&sd=true)
+
+Kendala:
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+# No. 9
+### Soal
+4.	Dengan menggunakan algoritma Round Robin, lakukan testing dengan menggunakan 3 worker, 2 worker, dan 1 worker sebanyak 100 request dengan 10 request/second, kemudian tambahkan grafiknya pada grimoire. **(9)**
+
+
+### Penyelesaian
+Cukup menjalankan script Bernama `no8algoA.sh` di node Eisen lalu ubah isi upstream sebagai berikut setiap pengetesannya.<br>
+**3 worker**<br>
+![Alt text](image-11.png)<br>
+**2 worker**<br>
+![Alt text](image-12.png)<br>
+**1 worker**<br>
+![Alt text](image-13.png)<br>
+
+### ab testing
+Command: 
+command ab testing: <br>
+```sh
+ab -n 100 -c 10 http://granz.channel.d27.com/
+```
+
+### Output
+Hasil dari pengetesan ab testing dapat dilihat di [GRIMOIRE](https://docs.google.com/document/d/1iqQ7df3Q7cw7-deWoB5pyWaQEnqQNwwH/edit?usp=sharing&ouid=103928347637411344802&rtpof=true&sd=true)
+
+
+Kendala:
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+# No. 10
+### Soal
+5.	Selanjutnya coba tambahkan konfigurasi autentikasi di LB dengan dengan kombinasi username: “netics” dan password: “ajkd27”, dengan yyy merupakan kode kelompok. Terakhir simpan file “htpasswd” nya di /etc/nginx/rahasisakita/ **(10)**
+
+
+### Penyelesaian
+**Isi script node Eisen:**
+```sh
+#!/bin/bash
+
+mkdir /etc/nginx/rahasiakita
+htpasswd -c -i -b /etc/nginx/rahasiakita/.htpasswd netics ajkd27
+
+echo '# Default menggunakan Round Robin
+upstream backend  {
+        server 10.35.3.1; #IP Lawine
+        server 10.35.3.2; #IP Linie
+        server 10.35.3.3; #IP Lugner
+}
+
+server {
+listen 80;
+server_name granz.channel.d27.com;
+
+        location / {
+                proxy_pass http://backend;
+                proxy_set_header    X-Real-IP $remote_addr;
+                proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header    Host $http_host;
+
+                auth_basic "Administrator Area";
+                auth_basic_user_file /etc/nginx/rahasiakita/.htpasswd;
+        }
+
+        location ~ /\.ht {
+            deny all;
+        }
+
+error_log /var/log/nginx/granz_error.log;
+access_log /var/log/nginx/granz_access.log;
+
+}
+' > /etc/nginx/sites-available/lb-jarkom
+
+service nginx restart
+```
+* Membuat folder rahasiakita di `/etc/nginx/`
+* Menambahkan credentials menggunakan apache2-utils yakni `htpasswd` menggunakan command `htpasswd -c -i -b /etc/nginx/rahasiakita/.htpasswd netics ajkd27`
+* Menambahkan atribut `auth_basic "Administrator Area";` & `auth_basic_user_file /etc/nginx/rahasiakita/.htpasswd;`
+
+
+### Output
+![Alt text](image-14.png)<br>
+![Alt text](image-15.png)<br>
+![Alt text](image-16.png)<br>
+![Alt text](image-17.png)<br>
+![Alt text](image-18.png)<br>
+
+Kendala:
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+# No. 11
+### Soal
+6.	Lalu buat untuk setiap request yang mengandung /its akan di proxy passing menuju halaman https://www.its.ac.id. **(11) hint: (proxy_pass)**
+
+
+### Penyelesaian
+**Isi script node Eisen:**
+```sh
+#!/bin/bash
+
+echo '# Default menggunakan Round Robin
+upstream backend  {
+        server 10.35.3.1; #IP Lawine
+        server 10.35.3.2; #IP Linie
+        server 10.35.3.3; #IP Lugner
+}
+
+server {
+listen 80;
+server_name granz.channel.d27.com;
+
+        location / {
+                proxy_pass http://backend;
+                proxy_set_header    X-Real-IP $remote_addr;
+                proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header    Host $http_host;
+
+                auth_basic "Administrator Area";
+                auth_basic_user_file /etc/nginx/rahasiakita/.htpasswd;
+        }
+
+        location /its {
+                proxy_pass https://www.its.ac.id;
+        }
+
+        location ~ /\.ht {
+            deny all;
+        }
+
+error_log /var/log/nginx/granz_error.log;
+access_log /var/log/nginx/granz_access.log;
+
+}
+' > /etc/nginx/sites-available/lb-jarkom
+
+service nginx restart
+```
+* Cukup menambahkan proxypass ke url its sebagai berikut
+```
+        location /its {
+                proxy_pass https://www.its.ac.id;
+        }
+```
+
+### Output
+![Alt text](image-19.png)<br>
+![Alt text](image-20.png)
+![Alt text](image-21.png)
+
+Kendala:
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+# No. 12
+### Soal
+7.	Selanjutnya LB ini hanya boleh diakses oleh client dengan IP [Prefix IP].3.69, [Prefix IP].3.70, [Prefix IP].4.167, dan [Prefix IP].4.168. **(12) hint: (fixed in dulu clientnya)**
+
+
+### Penyelesaian
+**Isi script node Eisen:**
+```sh
+#!/bin/bash
+
+echo '# Default menggunakan Round Robin
+upstream backend  {
+        server 10.35.3.1; #IP Lawine
+        server 10.35.3.2; #IP Linie
+        server 10.35.3.3; #IP Lugner
+}
+
+server {
+listen 80;
+server_name granz.channel.d27.com;
+
+        location / {
+                allow 10.35.3.69;
+                allow 10.35.3.70;
+                allow 10.35.4.167;
+                allow 10.35.4.168;
+                deny all;
+                proxy_pass http://backend;
+                proxy_set_header    X-Real-IP $remote_addr;
+                proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header    Host $http_host;
+
+                auth_basic "Administrator Area";
+                auth_basic_user_file /etc/nginx/rahasiakita/.htpasswd;
+        }
+
+        location /its {
+                proxy_pass https://www.its.ac.id;
+        }
+
+        location ~ /\.ht {
+            deny all;
+        }
+
+error_log /var/log/nginx/granz_error.log;
+access_log /var/log/nginx/granz_access.log;
+
+}
+' > /etc/nginx/sites-available/lb-jarkom
+
+service nginx restart
+```
+* Menambahkan IP yang disebutkan oleh soal dengan cara `allow [alamat ip];`
+* Menolak semua request selain dari IP yang di allow dengan cara `deny all;`
+
+### Output
+![Alt text](image-22.png)
+* Lalu restart node stark (disini saya hanya mengubah network interfaces stark untuk mengetes)
+![Alt text](image-23.png)
+![Alt text](image-24.png)
+
+
+Kendala:
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+# No. 13
+### Soal
+
+
+
+### Penyelesaian
+
+
+### Output
+
+
+Kendala:
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+# No. 14
+### Soal
+
+
+
+### Penyelesaian
+
+
+### Output
+
+
+Kendala:
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+# No. 15
+### Soal
+
+
+
+### Penyelesaian
+
+
+### Output
+
+
+Kendala:
+
+
+----------------------------------------------------------------------------------------------------------------------------------
