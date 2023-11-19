@@ -1,4 +1,4 @@
-# Jarkom-Modul-2-D27-2023
+# Jarkom-Modul-3-D27-2023
 
 Anggota Kelompok Jarkom D27:
 * Duevano Fairuz Pandya (5025211052)
